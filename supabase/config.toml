@@ -1,1 +1,4 @@
 project_id = "mynsuwuznnjqwhaurcmk"
+
+[functions.latex-convert]
+verify_jwt = false  # Using custom API key authentication

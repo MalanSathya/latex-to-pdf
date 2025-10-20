@@ -1,73 +1,220 @@
-# Welcome to your Lovable project
+# LaTeX to PDF Converter
 
-## Project info
+A lightweight, serverless web application for converting LaTeX documents to PDF. Built with React and Lovable Cloud (Supabase Edge Functions).
 
-**URL**: https://lovable.dev/projects/e73bf0c1-b16c-4b26-99f3-358ea897fbd8
+## Features
 
-## How can I edit this code?
+✨ **Simple Web Interface** - Paste LaTeX, click convert, download PDF  
+🔐 **Secure API** - API key authentication for programmatic access  
+⚡ **Serverless** - Runs on Lovable Cloud with automatic scaling  
+🎨 **Clean UI** - Developer-focused interface with syntax highlighting  
+📚 **Full Documentation** - Complete API examples in multiple languages  
 
-There are several ways of editing your application.
+## Live Demo
 
-**Use Lovable**
+Visit the deployed app to try it out instantly.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e73bf0c1-b16c-4b26-99f3-358ea897fbd8) and start prompting.
+## Quick Start
 
-Changes made via Lovable will be committed automatically to this repo.
+### Web Interface
 
-**Use your preferred IDE**
+1. Open the web app
+2. Paste or edit LaTeX code in the editor
+3. Click "Generate PDF"
+4. Download your compiled PDF
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### API Usage
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**Endpoint:** `POST /functions/v1/latex-convert`
 
-Follow these steps:
+**Headers:**
+```
+x-api-key: YOUR_API_KEY
+Content-Type: application/json
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+**Body:**
+```json
+{
+  "latex": "\\documentclass{article}\\begin{document}Hello World\\end{document}"
+}
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+See [API_EXAMPLES.md](./API_EXAMPLES.md) for complete examples in cURL, JavaScript, Python, and Node.js.
 
-# Step 3: Install the necessary dependencies.
-npm i
+## How It Works
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+1. **Frontend** - React app with textarea editor for LaTeX input
+2. **Backend** - Serverless edge function that:
+   - Validates API key
+   - Accepts LaTeX source code
+   - Calls LaTeX.Online compilation service
+   - Returns compiled PDF as base64 data URL
+3. **Compilation** - Uses [LaTeX.Online](https://latexonline.cc/) for secure, sandboxed LaTeX compilation
+
+## Setup & Deployment
+
+### Prerequisites
+- Lovable account (for deployment)
+- API key (configured via Lovable Secrets)
+
+### Local Development
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd latex-converter
+
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Configure API Key
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The `LATEX_API_KEY` secret is already configured in your Lovable Cloud project. This key is used to authenticate API requests.
 
-**Use GitHub Codespaces**
+### Deploy
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Deployment is automatic through Lovable:
+1. Push changes to your repository
+2. Lovable automatically deploys updates
+3. Your edge function is live instantly
 
-## What technologies are used for this project?
+## Architecture
 
-This project is built with:
+```
+┌─────────────┐
+│   Browser   │
+│  (React UI) │
+└──────┬──────┘
+       │
+       │ POST /latex-convert
+       │ { latex: "..." }
+       │
+       ▼
+┌─────────────────────┐
+│  Edge Function      │
+│  (Deno Runtime)     │
+│  - API Key Auth     │
+│  - Input Validation │
+└──────┬──────────────┘
+       │
+       │ LaTeX Source
+       │
+       ▼
+┌─────────────────────┐
+│  LaTeX.Online API   │
+│  - Compile LaTeX    │
+│  - Return PDF       │
+└─────────────────────┘
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Security Features
 
-## How can I deploy this project?
+- ✅ API key authentication required
+- ✅ Input size validation (max 100KB)
+- ✅ CORS headers configured
+- ✅ Secure LaTeX compilation via external service
+- ✅ No arbitrary shell execution
+- ✅ Rate limiting recommended for production
 
-Simply open [Lovable](https://lovable.dev/projects/e73bf0c1-b16c-4b26-99f3-358ea897fbd8) and click on Share -> Publish.
+## API Response Format
 
-## Can I connect a custom domain to my Lovable project?
+**Success:**
+```json
+{
+  "success": true,
+  "pdfUrl": "data:application/pdf;base64,JVBERi0xLj...",
+  "message": "PDF compiled successfully"
+}
+```
 
-Yes, you can!
+**Error:**
+```json
+{
+  "error": "Error message",
+  "details": "Detailed error information"
+}
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Limitations
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Maximum LaTeX source size: 100KB
+- Serverless execution timeout: 30 seconds
+- Depends on LaTeX.Online availability
+- Standard LaTeX packages only (no custom installations)
+
+## Cost & Scaling
+
+**Lovable Cloud Free Tier:**
+- Generous free usage included
+- Usage-based pricing beyond free tier
+- Automatically scales with demand
+- No server management required
+
+**LaTeX.Online:**
+- Free public API
+- Community-supported
+- For production: Consider self-hosting or alternative services
+
+## Troubleshooting
+
+### Common Issues
+
+**"Unauthorized" error:**
+- Verify `x-api-key` header is set correctly
+- Check API key in Lovable Cloud secrets
+
+**"LaTeX compilation failed":**
+- Validate LaTeX syntax
+- Check for missing `\end{}` tags
+- Ensure packages are standard LaTeX packages
+
+**PDF won't download:**
+- Try opening the data URL directly in browser
+- Check browser console for errors
+
+## Files Structure
+
+```
+├── src/
+│   ├── pages/
+│   │   └── Index.tsx          # Main React component
+│   ├── index.css              # Design system & styles
+│   └── integrations/
+│       └── supabase/          # Auto-generated Supabase client
+├── supabase/
+│   ├── functions/
+│   │   └── latex-convert/
+│   │       └── index.ts       # Edge function implementation
+│   └── config.toml            # Supabase configuration
+├── API_EXAMPLES.md            # Detailed API documentation
+└── README.md                  # This file
+```
+
+## Contributing
+
+Contributions welcome! Areas for improvement:
+- Additional LaTeX package support
+- Caching for repeated compilations
+- Rate limiting implementation
+- Alternative compilation backends
+- Batch processing support
+
+## License
+
+MIT License - feel free to use this project however you like.
+
+## Resources
+
+- [LaTeX.Online](https://latexonline.cc/) - LaTeX compilation service
+- [Lovable Documentation](https://docs.lovable.dev/)
+- [Overleaf](https://www.overleaf.com/learn) - Learn LaTeX
+- [Supabase Edge Functions](https://supabase.com/docs/guides/functions)
+
+## Credits
+
+Inspired by [latex-online](https://github.com/aslushnikov/latex-online) by @aslushnikov.
