@@ -85,9 +85,27 @@ const Index = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (pdfUrl) {
-      window.open(pdfUrl, '_blank');
+      try {
+        const response = await fetch(pdfUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'document.pdf';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (error) {
+        console.error('Download failed:', error);
+        toast({
+          title: "Download Failed",
+          description: "Could not download the PDF",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -175,6 +193,20 @@ const Index = () => {
               PDF compiled successfully! Click Download to get your file.
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* PDF Preview */}
+        {pdfUrl && (
+          <Card className="p-6 bg-card border-border">
+            <h2 className="text-xl font-bold text-foreground mb-4">PDF Preview</h2>
+            <div className="border border-border rounded-lg overflow-hidden bg-muted">
+              <iframe
+                src={pdfUrl}
+                className="w-full h-[600px]"
+                title="PDF Preview"
+              />
+            </div>
+          </Card>
         )}
 
         {/* API Documentation */}
