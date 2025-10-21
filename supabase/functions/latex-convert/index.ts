@@ -61,19 +61,18 @@ serve(async (req) => {
     console.log('Compiling LaTeX document...', { length: latex.length });
 
     // Use LaTeX.Online API (https://latexonline.cc/)
-    // This is a free public service that compiles LaTeX to PDF
+    // Switch to GET with text param because POST /compile is not supported publicly
     const latexOnlineUrl = 'https://latexonline.cc/compile';
-    
-    // Create a FormData with the LaTeX file
-    const formData = new FormData();
-    const latexBlob = new Blob([latex], { type: 'text/plain' });
-    formData.append('filecontents[]', latexBlob, 'document.tex');
-    formData.append('command', 'pdflatex');
 
-    // Call LaTeX.Online API
-    const compileResponse = await fetch(latexOnlineUrl, {
-      method: 'POST',
-      body: formData,
+    // Build query string with LaTeX content
+    const params = new URLSearchParams({
+      text: latex,
+      command: 'pdflatex',
+    });
+
+    // Call LaTeX.Online API via GET
+    const compileResponse = await fetch(`${latexOnlineUrl}?${params.toString()}`, {
+      method: 'GET',
     });
 
     if (!compileResponse.ok) {
