@@ -60,19 +60,24 @@ serve(async (req) => {
 
     console.log('Compiling LaTeX document...', { length: latex.length });
 
-    // Use LaTeX.Online API (https://latexonline.cc/)
-    // Switch to GET with text param because POST /compile is not supported publicly
-    const latexOnlineUrl = 'https://latexonline.cc/compile';
+    // Prefer TeXLive.net API via POST to avoid URL length limits
+    const texliveUrl = 'https://texlive.net/cgi-bin/latexcgi';
 
-    // Build query string with LaTeX content
-    const params = new URLSearchParams({
-      text: latex,
-      command: 'pdflatex',
-    });
+    const formData = new FormData();
+    const latexBlob = new Blob([latex], { type: 'text/plain' });
+    formData.append('filecontents[]', latexBlob, 'document.tex');
+    formData.append('filename[]', 'document.tex');
+    formData.append('engine', 'pdflatex');
+    formData.append('return', 'pdf');
 
-    // Call LaTeX.Online API via GET
-    const compileResponse = await fetch(`${latexOnlineUrl}?${params.toString()}`, {
-      method: 'GET',
+    // Call TeXLive API
+    const compileResponse = await fetch(texliveUrl, {
+      method: 'POST',
+      body: formData,
+      redirect: 'follow',
+      headers: {
+        'Accept': 'application/pdf',
+      },
     });
 
     if (!compileResponse.ok) {
