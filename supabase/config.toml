@@ -1,4 +1,4 @@
 project_id = "mynsuwuznnjqwhaurcmk"
 
 [functions.latex-convert]
-verify_jwt = false  # Using custom API key authentication
+verify_jwt = false  # Allow both API key auth (external) and open access (frontend)

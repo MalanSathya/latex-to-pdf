@@ -16,19 +16,23 @@ serve(async (req) => {
   }
 
   try {
-    // API Key Authentication
+    // Check for API key (for external API calls) - if present, validate it
     const apiKey = req.headers.get('x-api-key');
     const expectedApiKey = Deno.env.get('LATEX_API_KEY');
     
-    if (!apiKey || apiKey !== expectedApiKey) {
+    // If API key is provided, it must be valid
+    if (apiKey && apiKey !== expectedApiKey) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized: Invalid or missing API key' }),
+        JSON.stringify({ error: 'Unauthorized: Invalid API key' }),
         { 
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
+    
+    // Allow calls from frontend (no API key needed for now)
+    // For production, you may want to add JWT validation or require API key
 
     // Parse request body
     const { latex }: CompileRequest = await req.json();
