@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, FileText, Download, CheckCircle, XCircle, Code } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Loader2, FileText, Download, CheckCircle, XCircle, Code, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -123,58 +125,85 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Main Editor */}
-        <Card className="p-6 bg-card border-border">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                LaTeX Source
-              </label>
-              <span className="text-xs text-muted-foreground">
-                {latex.length} characters
-              </span>
-            </div>
-            
-            <Textarea
-              value={latex}
-              onChange={(e) => setLatex(e.target.value)}
-              className="code-editor min-h-[400px] bg-[hsl(var(--code-bg))] border-[hsl(var(--code-border))] font-mono text-sm resize-none focus-visible:ring-primary"
-              placeholder="Enter your LaTeX code here..."
-            />
+        {/* Main Editor and Preview */}
+        <ResizablePanelGroup direction="horizontal" className="min-h-[600px] rounded-lg border border-border">
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <Card className="h-full border-0 rounded-none bg-card">
+              <div className="p-6 space-y-4 h-full flex flex-col">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    LaTeX Source
+                  </label>
+                  <span className="text-xs text-muted-foreground">
+                    {latex.length} characters
+                  </span>
+                </div>
+                
+                <Textarea
+                  value={latex}
+                  onChange={(e) => setLatex(e.target.value)}
+                  className="code-editor flex-1 bg-[hsl(var(--code-bg))] border-[hsl(var(--code-border))] font-mono text-sm resize-none focus-visible:ring-primary"
+                  placeholder="Enter your LaTeX code here..."
+                />
 
-            <div className="flex gap-3">
-              <Button
-                onClick={handleCompile}
-                disabled={isCompiling || !latex.trim()}
-                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {isCompiling ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Compiling...
-                  </>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleCompile}
+                    disabled={isCompiling || !latex.trim()}
+                    className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    {isCompiling ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Compiling...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-4 h-4 mr-2" />
+                        Generate PDF
+                      </>
+                    )}
+                  </Button>
+
+                  {pdfUrl && (
+                    <Button
+                      onClick={handleDownload}
+                      variant="secondary"
+                      className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
+
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <Card className="h-full border-0 rounded-none bg-card">
+              <div className="p-6 h-full flex flex-col">
+                <h2 className="text-xl font-bold text-foreground mb-4">PDF Preview</h2>
+                {pdfUrl ? (
+                  <div className="border border-border rounded-lg overflow-hidden bg-muted flex-1">
+                    <iframe
+                      src={pdfUrl}
+                      className="w-full h-full"
+                      title="PDF Preview"
+                    />
+                  </div>
                 ) : (
-                  <>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Generate PDF
-                  </>
+                  <div className="border border-border rounded-lg bg-muted flex-1 flex items-center justify-center">
+                    <p className="text-muted-foreground">Compile LaTeX to see preview</p>
+                  </div>
                 )}
-              </Button>
-
-              {pdfUrl && (
-                <Button
-                  onClick={handleDownload}
-                  variant="secondary"
-                  className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
-              )}
-            </div>
-          </div>
-        </Card>
+              </div>
+            </Card>
+          </ResizablePanel>
+        </ResizablePanelGroup>
 
         {/* Status Messages */}
         {error && (
@@ -195,22 +224,19 @@ const Index = () => {
           </Alert>
         )}
 
-        {/* PDF Preview */}
-        {pdfUrl && (
-          <Card className="p-6 bg-card border-border">
-            <h2 className="text-xl font-bold text-foreground mb-4">PDF Preview</h2>
-            <div className="border border-border rounded-lg overflow-hidden bg-muted">
-              <iframe
-                src={pdfUrl}
-                className="w-full h-[600px]"
-                title="PDF Preview"
-              />
-            </div>
-          </Card>
-        )}
-
-        {/* API Documentation */}
-        <Card className="p-6 bg-card border-border">
+        {/* API Documentation - Collapsible */}
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Code className="w-4 h-4" />
+                Dev Options
+              </span>
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <Card className="p-6 bg-card border-border">
           <h2 className="text-xl font-bold text-foreground mb-4">API Integration</h2>
           
           <div className="space-y-4 text-sm">
@@ -258,7 +284,9 @@ const data = await response.json();`}
               </pre>
             </div>
           </div>
-        </Card>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
