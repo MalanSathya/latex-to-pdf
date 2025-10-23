@@ -16,6 +16,12 @@ serve(async (req) => {
   }
 
   try {
+    // Check for format preference (binary PDF vs JSON response)
+    const url = new URL(req.url);
+    const format = url.searchParams.get('format');
+    const acceptHeader = req.headers.get('accept');
+    const returnBinary = format === 'binary' || acceptHeader === 'application/pdf';
+
     // Check for API key (for external API calls) - if present, validate it
     const apiKey = req.headers.get('x-api-key');
     const expectedApiKey = Deno.env.get('LATEX_API_KEY');
@@ -99,6 +105,28 @@ serve(async (req) => {
     // Get the PDF as a blob
     const pdfBlob = await compileResponse.blob();
     const pdfArrayBuffer = await pdfBlob.arrayBuffer();
+
+    console.log('LaTeX compilation successful', { 
+      size: pdfArrayBuffer.byteLength,
+      returnBinary 
+    });
+
+    // If binary format requested, return PDF directly
+    if (returnBinary) {
+      return new Response(
+        pdfArrayBuffer,
+        { 
+          status: 200,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'attachment; filename="document.pdf"'
+          }
+        }
+      );
+    }
+
+    // Otherwise, return JSON with base64 data URL
     const pdfBase64 = btoa(
       new Uint8Array(pdfArrayBuffer).reduce(
         (data, byte) => data + String.fromCharCode(byte),
@@ -106,9 +134,6 @@ serve(async (req) => {
       )
     );
 
-    console.log('LaTeX compilation successful');
-
-    // Return PDF as data URL
     return new Response(
       JSON.stringify({ 
         success: true,
