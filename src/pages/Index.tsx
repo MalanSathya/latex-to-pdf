@@ -74,7 +74,7 @@ const Index = () => {
           description: "PDF compiled successfully",
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errorMsg = err.message || "Failed to compile LaTeX";
       setError(errorMsg);
       toast({
@@ -282,6 +282,13 @@ const Index = () => {
 );
 const data = await response.json();`}
               </pre>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-foreground mb-2">Binary PDF Support</h3>
+              <p className="text-muted-foreground">
+                External apps can use <code className="bg-[hsl(var(--code-bg))] p-1 rounded border border-[hsl(var(--code-border))] text-primary">?format=binary</code> or set <code className="bg-[hsl(var(--code-bg))] p-1 rounded border border-[hsl(var(--code-border))] text-primary">Accept: application/pdf</code> to receive the PDF directly.
+              </p>
             </div>
           </div>
             </Card>
