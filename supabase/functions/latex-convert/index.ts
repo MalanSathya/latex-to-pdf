@@ -9,6 +9,45 @@ interface CompileRequest {
   latex: string;
 }
 
+// Escape special LaTeX characters if not already escaped
+function escapeLatexSpecialChars(text: string): string {
+  const specialChars: Record<string, string> = {
+    '#': '\\#',
+    '$': '\\$',
+    '%': '\\%',
+    '&': '\\&',
+    '~': '\\~{}',
+    '_': '\\_',
+    '^': '\\^{}',
+    '{': '\\{',
+    '}': '\\}',
+    '\\': '\\textbackslash{}',
+  };
+  
+  let result = '';
+  let i = 0;
+  
+  while (i < text.length) {
+    // Check if current character is already escaped
+    if (text[i] === '\\' && i + 1 < text.length) {
+      // Skip already escaped sequences
+      result += text[i] + text[i + 1];
+      i += 2;
+      continue;
+    }
+    
+    // Escape special character if found
+    if (specialChars[text[i]]) {
+      result += specialChars[text[i]];
+    } else {
+      result += text[i];
+    }
+    i++;
+  }
+  
+  return result;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -40,9 +79,9 @@ serve(async (req) => {
     // For production, you may want to add JWT validation or require API key
 
     // Parse request body
-    const { latex }: CompileRequest = await req.json();
+    const { latex: rawLatex }: CompileRequest = await req.json();
 
-    if (!latex || typeof latex !== 'string') {
+    if (!rawLatex || typeof rawLatex !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Invalid request: latex field is required' }),
         { 
@@ -53,7 +92,7 @@ serve(async (req) => {
     }
 
     // Input validation - prevent excessively large documents
-    if (latex.length > 100000) {
+    if (rawLatex.length > 100000) {
       return new Response(
         JSON.stringify({ error: 'LaTeX document too large (max 100KB)' }),
         { 
@@ -62,6 +101,9 @@ serve(async (req) => {
         }
       );
     }
+
+    // Escape special characters in LaTeX content
+    const latex = escapeLatexSpecialChars(rawLatex);
 
     console.log('Compiling LaTeX document...', { length: latex.length });
 

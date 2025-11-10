@@ -75,7 +75,7 @@ const Index = () => {
         });
       }
     } catch (err: unknown) {
-      const errorMsg = err.message || "Failed to compile LaTeX";
+      const errorMsg = err instanceof Error ? err.message : "Failed to compile LaTeX";
       setError(errorMsg);
       toast({
         title: "Error",
