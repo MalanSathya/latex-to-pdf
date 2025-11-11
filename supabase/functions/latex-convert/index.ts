@@ -21,28 +21,20 @@ function escapeLatexSpecialChars(text: string): string {
     '^': '\\^{}',
     '{': '\\{',
     '}': '\\}',
-    '\\': '\\textbackslash{}',
   };
   
   let result = '';
-  let i = 0;
   
-  while (i < text.length) {
-    // Check if current character is already escaped
-    if (text[i] === '\\' && i + 1 < text.length) {
-      // Skip already escaped sequences
-      result += text[i] + text[i + 1];
-      i += 2;
-      continue;
-    }
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const prevChar = i > 0 ? text[i - 1] : '';
     
-    // Escape special character if found
-    if (specialChars[text[i]]) {
-      result += specialChars[text[i]];
+    // If this is a special character and it's not already escaped
+    if (char in specialChars && prevChar !== '\\') {
+      result += specialChars[char];
     } else {
-      result += text[i];
+      result += char;
     }
-    i++;
   }
   
   return result;
